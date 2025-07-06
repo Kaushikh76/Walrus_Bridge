@@ -1,1 +1,243 @@
+Eth-to-Walrus Developer Tool
+Simple tool for bridging Ethereum users to Walrus decentralized storage on Sui
+What This Tool Does
 
+1) Bridges USDC from Ethereum (Arbitrum) to Sui via Wormhole
+2) Stores data permanently on Walrus decentralized storage
+3) Returns blob IDs for permanent data access
+4) Works with any Ethereum wallet (MetaMask, WalletConnect, etc.)
+
+Quick Setup (5 minutes)
+1. Install Walrus
+bashcurl -L https://raw.githubusercontent.com/your-repo/eth-walrus-bridge/main/setup-walrus.sh | bash
+2. Start Walrus Daemon
+bash~/.walrus/start-daemon.sh
+3. Install in Your Project
+bashnpm install eth-walrus-bridge ethers
+4. Use in Your App
+typescriptimport { EthWalrusBridge } from 'eth-walrus-bridge'
+
+const bridge = new EthWalrusBridge()
+
+// Store user data
+const result = await bridge.bridgeAndStore(signer, userData)
+console.log('Stored at:', result.blobId)
+
+// Retrieve data
+const data = await bridge.retrieveFromWalrus(blobId)
+console.log('Retrieved:', data.data)
+📋 Tool Components
+1. Core Bridge Library (eth-walrus-bridge.ts)
+
+Main class for bridging and storage
+Handles Wormhole CCTP bridge
+Integrates with Walrus API
+Error handling and validation
+
+
+4. React Hook 
+
+useEthWalrus() hook for React apps
+Simplified API for common operations
+State management included
+
+🔧 How It Works
+mermaidgraph LR
+    A[Ethereum User] --> B[Connect Wallet]
+    B --> C[Bridge USDC via Wormhole]
+    C --> D[Store Data on Walrus]
+    D --> E[Get Blob ID]
+    E --> F[Permanent Storage]
+
+User connects Ethereum wallet (Arbitrum Sepolia)
+Bridge USDC to Sui via Wormhole CCTP protocol
+Store data on Walrus decentralized storage network
+Get blob ID for permanent data access
+Retrieve anytime using blob ID from anywhere
+
+💻 Code Examples
+Basic Usage
+typescriptconst bridge = new EthWalrusBridge()
+const signer = await provider.getSigner()
+
+// Store any data
+const result = await bridge.bridgeAndStore(signer, {
+  userProfile: { name: "Alice", preferences: {...} },
+  gameState: { level: 5, score: 1000 },
+  documents: ["file1.pdf", "file2.jpg"]
+})
+
+if (result.success) {
+  console.log('Data stored permanently!')
+  console.log('Blob ID:', result.blobId)
+  console.log('Bridge TX:', result.bridgeTxHash)
+}
+React Integration
+typescriptfunction MyApp() {
+  const { storeData, retrieveData, checkHealth } = useEthWalrus()
+  
+  const handleSave = async () => {
+    const result = await storeData(signer, userData)
+    setStoredBlobId(result.blobId)
+  }
+  
+  const handleLoad = async () => {
+    const result = await retrieveData(blobId)
+    setUserData(result.data)
+  }
+  
+  return (
+    <div>
+      <button onClick={handleSave}>Save to Walrus</button>
+      <button onClick={handleLoad}>Load from Walrus</button>
+    </div>
+  )
+}
+Error Handling
+typescripttry {
+  const result = await bridge.bridgeAndStore(signer, data)
+  
+  if (!result.success) {
+    switch (result.error) {
+      case 'Insufficient USDC balance':
+        // Guide user to get USDC
+        break
+      case 'Walrus daemon not accessible':
+        // Show setup instructions
+        break
+      default:
+        // Generic error handling
+    }
+  }
+} catch (error) {
+  console.error('Bridge failed:', error)
+}
+Developer APIs
+EthWalrusBridge
+Constructor
+typescriptnew EthWalrusBridge({
+  walrusEndpoint?: string     // Default: 'http://localhost:31417'
+  suiRecipientAddress?: string // Your Sui address
+})
+Methods
+typescript// Bridge and store data
+bridgeAndStore(signer, data, amount?)
+// Returns: { success, blobId?, bridgeTxHash?, error? }
+
+// Retrieve stored data
+retrieveFromWalrus(blobId)
+// Returns: { success, data?, error? }
+
+// Check user's USDC balance
+getUSDCBalance(signer)
+// Returns: string (formatted balance)
+
+// Health check
+checkWalrusHealth()
+// Returns: boolean
+useEthWalrus Hook
+typescriptconst {
+  storeData,     // (signer, data) => Promise<result>
+  retrieveData,  // (blobId) => Promise<result>
+  checkHealth,   // () => Promise<boolean>
+  getBalance     // (signer) => Promise<string>
+} = useEthWalrus()
+
+Package Structure
+eth-walrus-bridge/
+├── src/
+│   ├── index.ts              # Main bridge class
+│   ├── types.ts              # TypeScript types
+│   └── utils.ts              # Helper functions
+├── scripts/
+│   └── start-daemon.sh       # Daemon start script
+├── examples/
+│   ├── basic-usage.js        # Simple example
+│   ├── react-app/            # React example
+│   └── demo.html             # HTML demo
+├── package.json
+├── README.md
+└── LICENSE
+
+
+Security Notes
+
+Testnet Only: Current contracts are for Arbitrum Sepolia testnet
+Wallet Safety: Users control their own private keys
+Data Privacy: Data stored on Walrus is public by default
+Bridge Risk: Standard Wormhole bridge risks apply
+
+🚧 Production Checklist
+
+ Update to mainnet contract addresses
+ Implement proper error logging
+ Add retry logic for failed operations
+ Set up monitoring for Walrus daemon
+ Add rate limiting for heavy usage
+ Implement data encryption if needed
+ Add proper wallet validation
+ Set up alerting for bridge failures
+
+📊 Requirements
+User Requirements
+
+Ethereum wallet (MetaMask, etc.)
+Arbitrum Sepolia testnet connection
+At least 1 USDC for bridge fees
+Small amount of ETH for gas
+
+Developer Requirements
+
+Node.js 16+
+Walrus daemon running locally
+Basic Ethereum development knowledge
+
+🎯 Use Cases
+Perfect For:
+
+DApp Data Storage: User profiles, game states, settings
+File Storage: Documents, images, metadata
+Backup Systems: Decentralized data backup
+Cross-Chain Apps: Bridge Ethereum data to Sui ecosystem
+
+Examples:
+
+Social media posts and profiles
+Game saves and achievements
+Document management systems
+NFT metadata and files
+Application state backup
+User preference storage
+
+🆘 Support & Troubleshooting
+Common Issues:
+"Walrus daemon not accessible"
+
+Start daemon: ~/.walrus/start-daemon.sh
+Check status: ~/.walrus/check-status.sh
+
+"Insufficient USDC balance"
+
+Get testnet USDC: https://faucet.circle.com/
+Need at least 1 USDC for bridge
+
+"Bridge transaction failed"
+
+Check network connection
+Verify wallet has ETH for gas
+Try again in a few minutes
+
+"MetaMask not found"
+
+Install MetaMask browser extension
+Or use WalletConnect for mobile wallets
+
+Getting Help:
+
+Check the example demo app
+Read the full documentation
+Open GitHub issues for bugs
+Join Discord for community support
+
+
+Ready to give your Ethereum users permanent, decentralized storage? Start building with eth-walrus-bridge today! 🚀
